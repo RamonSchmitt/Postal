@@ -1,37 +1,38 @@
 class PostsController < ApplicationController
+  load_and_authorize_resource
 
   def index
-     @posts = Post.order( created_at: :desc )
+    @posts = @posts.order( created_at: :desc )
   end
 
   def create
-    post_params = params.require( :post ).permit( :content )
-
-    @post = Post.new( content: post_params[:content] )
-    @post.user = current_user
-    authorize! :create, @post
-
-     if @post.save
-        redirect_to posts_path
-     else
-        render posts_path
-     end
+    if @post.save
+      redirect_to posts_path
+    else
+      render posts_path
+    end
   end
 
   def user
-     @user = User.find( params[:user_id] )
-     authorize! :read, @user
+    @user = User.find( params[:user_id] )
+    authorize! :read, @user
 
-     @posts = Post.where( user: @user ).order( created_at: :desc )
-     authorize! :read, @posts
+    @posts = Post.where( user: @user ).order( created_at: :desc )
+    authorize! :read, @posts
 
-     @likes = @user.likes.joins( :post ).order( "posts.created_at DESC" )
-     authorize! :read, @likes
+    @likes = @user.likes.joins( :post ).order( "posts.created_at DESC" )
+    authorize! :read, @likes
   end
 
   def index
     @posts = Post.order( created_at: :desc )
     authorize! :read, @posts
   end
+
+  private
+
+    def post_params
+      params.require( :post ).permit( :content )
+    end
 
 end
